@@ -46,7 +46,7 @@ export class WorkOrder {
     numeroOrden: string;
 
     @Column({ type: 'text' })
-    descripcion: string;
+    descripcion: string;  
 
     // Relación con `Truck`
     @ManyToOne(() => Truck, truck => truck.workOrders, { onDelete: 'CASCADE' })

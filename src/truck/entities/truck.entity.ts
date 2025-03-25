@@ -57,7 +57,7 @@ export class Truck {
 
     // Relación correcta con WorkOrder
     @OneToMany(() => WorkOrder, workOrder => workOrder.truck)
-    @JoinColumn({ name: 'truckId' })
+    @JoinColumn({ name: 'historial' })
     workOrders: WorkOrder[];
 
     @DeleteDateColumn()

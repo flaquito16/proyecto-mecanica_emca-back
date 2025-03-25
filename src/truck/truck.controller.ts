@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
 import { TruckService } from './truck.service';
 import { CreateTruckDto } from './dto/create-truck.dto';
 import { UpdateTruckDto } from './dto/update-truck.dto';
@@ -23,9 +23,14 @@ export class TruckController {
 
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.truckService.findOneWithWorkOrders(+id);
-  }
+  async findOne(@Param('id') id: number) {
+      const details = await this.truckService.findById(id);
+      if (!details) {
+          throw new NotFoundException(`Camión con ID ${id} no encontrado.`);
+      }
+      return details;
+    }
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTruckDto: UpdateTruckDto) {

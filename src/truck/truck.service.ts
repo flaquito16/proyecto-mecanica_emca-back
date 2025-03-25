@@ -23,6 +23,10 @@ export class TruckService {
     return this.truckRepository.findOneBy({id_truck});
   }
 
+  async findById(id_truck: number): Promise<Truck> {
+    return await this.truckRepository.findOne({where: {id_truck: id_truck}});
+  }
+
   update(id_truck: number, updateTruckDto: UpdateTruckDto) {
     return this.truckRepository.update({id_truck}, updateTruckDto);
   }
