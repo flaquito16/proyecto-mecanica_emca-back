@@ -56,12 +56,9 @@ export class Truck {
     numero_serie: string;
 
     // Relación correcta con WorkOrder
-    @OneToMany(() => WorkOrder, workOrder => workOrder.truck)
-    @JoinColumn({ name: 'historial' })
+    @OneToMany(() => WorkOrder, workOrder => workOrder.truck, {onDelete: 'CASCADE'})
     workOrders: WorkOrder[];
 
     @DeleteDateColumn()
     deletedAt?: Date;
 }
-// Compare this snippet from src/truck/dto/update-truck.dto.ts:
-// import { PartialType } from '@nestjs/mapped-types';

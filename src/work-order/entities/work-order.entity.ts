@@ -59,4 +59,4 @@ export class WorkOrder {
 
     @DeleteDateColumn()
     deletedAt?: Date;
-}
+};

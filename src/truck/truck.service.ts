@@ -16,7 +16,9 @@ export class TruckService {
   }
 
   findAll() {
-    return this.truckRepository.find();
+    return this.truckRepository.find({
+      relations: ['workOrders']
+    });
   }
 
   findOne(id_truck: number) {
@@ -24,8 +26,12 @@ export class TruckService {
   }
 
   async findById(id_truck: number): Promise<Truck> {
-    return await this.truckRepository.findOne({where: {id_truck: id_truck}});
-  }
+    return await this.truckRepository.findOne({
+        where: { id_truck },
+        relations: ['workOrders'], // Cargar las órdenes de trabajo relacionadas
+    });
+}
+
 
   update(id_truck: number, updateTruckDto: UpdateTruckDto) {
     return this.truckRepository.update({id_truck}, updateTruckDto);

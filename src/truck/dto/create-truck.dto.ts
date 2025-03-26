@@ -71,4 +71,5 @@ export class CreateTruckDto {
     @IsString()
     @MinLength(1)
     numero_serie: string;
-}
+
+};
