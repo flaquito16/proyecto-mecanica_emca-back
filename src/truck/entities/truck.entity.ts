@@ -1,3 +1,4 @@
+import { Operator } from 'src/operator/entities/operator.entity';
 import { WorkOrder } from 'src/work-order/entities/work-order.entity';
 import {
     Column,
@@ -58,6 +59,9 @@ export class Truck {
     // Relación correcta con WorkOrder
     @OneToMany(() => WorkOrder, workOrder => workOrder.truck, {onDelete: 'CASCADE'})
     workOrders: WorkOrder[];
+
+    @OneToMany(() => Operator, operator => operator.truck, {onDelete: 'CASCADE'})      
+    operators: Operator[]
 
     @DeleteDateColumn()
     deletedAt?: Date;

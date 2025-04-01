@@ -12,7 +12,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {};
 
 
   async register({nombre, apellido, correo, contraseña}: RegisterDto){
@@ -37,13 +37,13 @@ export class AuthService {
    
     if (!user) {
       throw new UnauthorizedException('El correo electronico es incorrecto')
-    }
+    };
 
     const isPasswordValid = await bcrypt.compare(contraseña, user.contraseña)
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('La contraseña es invalida')
-    }
+    };
 
     const payload = { sub: user.id_usuario, nombre: user.nombre, apellido: user.apellido };
     const token = this.jwtService.sign(payload, {
@@ -66,7 +66,7 @@ export class AuthService {
     const user = await this.userService.findOne(userId);
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado');
-    }
+    };
     return { id: user.id_usuario, nombre: user.nombre, apellido: user.apellido, correo: user.correo };
   };
-}
+};

@@ -48,14 +48,24 @@ export class WorkOrder {
     @Column({ type: 'text' })
     descripcion: string;  
 
-    // Relación con `Truck`
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    precioInterno: number; 
+    
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    precioExterno: number;  
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    precioTotal: number;  
+
+    // Relación con Truck
     @ManyToOne(() => Truck, truck => truck.workOrders, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'truckId' }) 
     truck: Truck;
 
-    // Relación con `Stock`
-    @OneToMany(() => Stock, stock => stock.workOrder)
-    stock: Stock[];
+    // Relación con Stock
+    @ManyToOne(() => Stock, stock => stock.workOrder, {onDelete: 'CASCADE'})
+    @JoinColumn({name: 'stockId'})
+    stock: Stock;
 
     @DeleteDateColumn()
     deletedAt?: Date;

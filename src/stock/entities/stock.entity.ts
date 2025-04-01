@@ -15,11 +15,11 @@ export class Stock {
     @Column({type: 'text'})
     nombre: string;
 
-    @Column({type: 'text'})
-    cantidad: string;
+    @Column({type: 'int'})
+    cantidad: number;
 
-    @Column({type: 'text'})
-    precio: string;
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    precio: number;
 
     @OneToMany(() => Stock, stock => stock.workOrder)
     workOrder: WorkOrder;

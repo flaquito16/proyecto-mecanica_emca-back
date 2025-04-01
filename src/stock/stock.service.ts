@@ -15,8 +15,8 @@ export class StockService {
     return this.stockRepository.save(createStockDto);
   }
 
-  findAll() {
-    return this.stockRepository.find();
+  findAll(): Promise<Stock[]> {
+    return this.stockRepository.find({relations: ['work']});
   }
 
   findOne(id_stock: number) {

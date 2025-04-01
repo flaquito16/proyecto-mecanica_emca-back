@@ -11,6 +11,8 @@ import { StockModule } from './stock/stock.module';
 import { Stock } from './stock/entities/stock.entity';
 import { SectionModule } from './section/section.module';
 import { Section } from './section/entities/section.entity';
+import { OperatorModule } from './operator/operator.module';
+import { Operator } from './operator/entities/operator.entity';
 
 
 @Module({
@@ -26,14 +28,15 @@ import { Section } from './section/entities/section.entity';
       Truck,
       WorkOrder,
       Stock,
-      Section, // aqui si agregas una tabla nuevo en el back tienes que meter el nombre de esa tabla aca, ya que si no se ingresa no se creara
+      Section,
+      Operator // aqui si agregas una tabla nuevo en el back tienes que meter el nombre de esa tabla aca, ya que si no se ingresa no se creara
     ],       // Asegúrate de que la entidad está importada
     synchronize: true,      // Solo para desarrollo, sincroniza automáticamente las tablas con las entidades
   }), 
   UserModule, 
   AuthModule, 
   TruckModule, 
-  WorkOrderModule, StockModule, SectionModule,
+  WorkOrderModule, StockModule, SectionModule, OperatorModule,
 ],
   controllers: [],
   providers: [],

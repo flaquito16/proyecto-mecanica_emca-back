@@ -33,7 +33,7 @@ export class TruckController {
 
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTruckDto: UpdateTruckDto) {
+  update(@Param('id') id: number, @Body() updateTruckDto: UpdateTruckDto) {
     return this.truckService.update(+id, updateTruckDto);
   }
 

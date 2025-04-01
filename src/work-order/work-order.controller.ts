@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
 import { WorkOrderService } from './work-order.service';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
 import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
@@ -21,7 +21,11 @@ export class WorkOrderController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: number) {
+    const details = await this.workOrderService.findOne(id)
+    if (!details) {
+      throw new NotFoundException(`Orden con ID ${id} no encontrado.`)
+    }
     return this.workOrderService.findOne(+id);
   }
 
@@ -31,12 +35,13 @@ export class WorkOrderController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWorkOrderDto: UpdateWorkOrderDto) {
+  update(@Param('id') id: number, @Body() updateWorkOrderDto: UpdateWorkOrderDto) {
     return this.workOrderService.update(+id, updateWorkOrderDto);
   }
 
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     return this.workOrderService.remove(+id);
   }
 }
