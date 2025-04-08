@@ -115,7 +115,7 @@ export class WorkOrderService {
   async findById(id_workOrder: number): Promise<WorkOrder> {
     return await this.workOrderRepository.findOne({
         where: { id_workOrder },
-        relations: ['truck', 'operator'], // Cargar las órdenes de trabajo relacionadas
+        relations: ['truck', 'operator', 'productos'], // Cargar las órdenes de trabajo relacionadas
     });
 }
 
@@ -167,7 +167,6 @@ export class WorkOrderService {
                 } else {
                     stock.cantidad -= cantidad; // Restar la nueva cantidad directamente
                 }
-
                 // Actualizar precio unitario si se envió en la actualización
                 if (precio) {
                     stock.precio = precio;
