@@ -5,5 +5,5 @@ export class CreateOperatorDto {
     @Transform(({ value }) => value.trim().toUpperCase())
     @IsString()
     @MinLength(1)
-    nombre_operario: string;
+    nombreO: string;
 }

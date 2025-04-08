@@ -1,10 +1,12 @@
 import { Truck } from 'src/truck/entities/truck.entity';
+import { WorkOrder } from 'src/work-order/entities/work-order.entity';
 import {
     Column,
     DeleteDateColumn,
     Entity,
     JoinColumn,
     ManyToOne,
+    OneToMany,
     PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -14,11 +16,10 @@ export class Operator {
     id_operator: number;
 
     @Column({ type: 'text' })
-    nombre_operario: string;
+    nombreO: string;
 
-    @ManyToOne(() => Truck, truck => truck.operators, {onDelete: 'CASCADE'})
-    @JoinColumn({name : 'truckId'})
-    truck: Truck;
+    @OneToMany(() => WorkOrder, workOrder => workOrder.operator, {onDelete: 'CASCADE'})
+    workOrders: WorkOrder[]; 
 
     @DeleteDateColumn()
     deletedAt?: Date;

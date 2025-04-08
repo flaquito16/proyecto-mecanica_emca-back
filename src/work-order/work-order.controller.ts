@@ -22,12 +22,17 @@ export class WorkOrderController {
 
   @Get(':id')
   async findOne(@Param('id') id: number) {
-    const details = await this.workOrderService.findOne(id)
+    const details = await this.workOrderService.findById(id)
     if (!details) {
       throw new NotFoundException(`Orden con ID ${id} no encontrado.`)
     }
-    return this.workOrderService.findOne(+id);
+    return details;
   }
+
+  @Get('operator/:operatorId')
+  async findByOperator(@Param('operatorId') operatorId: number) {
+    return this.workOrderService.findByOperator(+operatorId);
+  } 
 
   @Get('truck/:truckId')
   async findByTruck(@Param('truckId') truckId: number) {

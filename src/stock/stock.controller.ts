@@ -25,6 +25,8 @@ export class StockController {
     return this.stockService.findOne(+id);
   }
 
+  @Get('work/:')
+
   @Patch(':id')
   update(@Param('id') id: number, @Body() updateStockDto: UpdateStockDto) {
     return this.stockService.update(+id, updateStockDto);

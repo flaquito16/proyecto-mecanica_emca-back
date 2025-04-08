@@ -25,6 +25,11 @@ export class SectionController {
     return this.sectionService.findOne(+id);
   }
 
+  @Get('truck/:truckId')
+  async findByTruck(@Param('truckId') truckId: number) {
+    return this.sectionService.findByTruck(+truckId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateSectionDto: UpdateSectionDto) {
     return this.sectionService.update(+id, updateSectionDto);

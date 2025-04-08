@@ -1,3 +1,4 @@
+import { Operator } from 'src/operator/entities/operator.entity';
 import { Stock } from 'src/stock/entities/stock.entity';
 import { Truck } from 'src/truck/entities/truck.entity';
 import {
@@ -14,12 +15,6 @@ import {
 export class WorkOrder {
     @PrimaryGeneratedColumn()
     id_workOrder: number;
-
-    @Column({ type: 'text' })
-    area: string;
-
-    @Column({ type: 'text' })
-    operario: string;
 
     @Column({ type: 'text' })
     encargado: string;
@@ -62,10 +57,13 @@ export class WorkOrder {
     @JoinColumn({ name: 'truckId' }) 
     truck: Truck;
 
+    @ManyToOne(() => Operator, operator => operator.workOrders, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'operatorId' })
+    operator: Operator; 
+
     // Relación con Stock
-    @ManyToOne(() => Stock, stock => stock.workOrder, {onDelete: 'CASCADE'})
-    @JoinColumn({name: 'stockId'})
-    stock: Stock;
+    @OneToMany(() => Stock, stock => stock.workOrder, { onDelete: 'CASCADE' })
+    productos: Stock[];
 
     @DeleteDateColumn()
     deletedAt?: Date;

@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsString, MinLength } from 'class-validator';
+import { IsEmpty, IsString, MinLength } from 'class-validator';
 
 export class CreateTruckDto {
     @Transform(({ value }) => value.trim().toUpperCase())
@@ -11,16 +11,6 @@ export class CreateTruckDto {
     @IsString()
     @MinLength(1)
     nombre_maquina: string;
-
-    @Transform(({ value }) => value.trim().toUpperCase())
-    @IsString()
-    @MinLength(1)
-    codigo_seccion: string;
-
-    @Transform(({ value }) => value.trim().toUpperCase())
-    @IsString()
-    @MinLength(1)
-    nombre_seccion: string;
 
     @Transform(({ value }) => value.trim().toUpperCase())
     @IsString()

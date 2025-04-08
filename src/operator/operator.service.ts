@@ -17,11 +17,20 @@ export class OperatorService {
   }
 
   findAll() {
-    return this.operatorRepository.find();
+    return this.operatorRepository.find({
+      relations: ['workOrders'], // Cargar las órdenes de trabajo relacionadas
+    });
   }
 
   findOne(id_operator: number) {
     return this.operatorRepository.findOneBy({id_operator});
+  }
+
+  async findById(id_operator: number): Promise<Operator> {
+    return await this.operatorRepository.findOne({
+        where: { id_operator },
+        relations: ['workOrders'], // Cargar las órdenes de trabajo relacionadas
+    });
   }
 
   update(id_operator: number, updateOperatorDto: UpdateOperatorDto) {

@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { WorkOrder } from './entities/work-order.entity';
 import { Truck } from '../truck/entities/truck.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Stock } from 'src/stock/entities/stock.entity';
+import { Operator } from 'src/operator/entities/operator.entity';
 
 @Injectable()
 export class WorkOrderService {
@@ -13,7 +15,13 @@ export class WorkOrderService {
     private workOrderRepository: Repository<WorkOrder>,
 
     @InjectRepository(Truck)
-    private truckRepository: Repository<Truck>
+    private truckRepository: Repository<Truck>,
+
+    @InjectRepository(Stock)
+    private stockRepository: Repository<Stock>,
+
+    @InjectRepository(Operator)
+    private operatorRepository: Repository<Operator>
   ) {}
 
   /**
@@ -33,7 +41,7 @@ export class WorkOrderService {
   
 
   async create(createWorkOrderDto: CreateWorkOrderDto): Promise<WorkOrder> {
-    const { truckId, fechaCierre, precioInterno, precioExterno, precioTotal, ...workOrderData } = createWorkOrderDto;
+    const { truckId, operatorId, fechaCierre, precioInterno, precioExterno, precioTotal, ...workOrderData } = createWorkOrderDto;
     const numeroOrden = await this.generateWorkOrderNumber();
     
     // Convertir fechas de string a Date
@@ -45,11 +53,14 @@ export class WorkOrderService {
     const precioExternoNum = typeof precioExterno === 'string' ? parseFloat(precioExterno) : precioExterno;
     const precioTotalNum = typeof precioTotal === 'string' ? parseFloat(precioTotal) : precioTotal;
     
-
     // Validar que el camión existe antes de asignarlo a la orden
     const truck = await this.truckRepository.findOne({ where: { id_truck: truckId } });
     if (!truck) {
       throw new NotFoundException(`Camión con ID ${truckId} no encontrado.`);
+    }
+    const operator = await this.operatorRepository.findOne({ where: { id_operator: operatorId } });
+    if (!operator) {
+      throw new NotFoundException(`Operador con ID ${operatorId} no encontrado.`);
     }
 
     const workOrder = this.workOrderRepository.create({
@@ -60,11 +71,11 @@ export class WorkOrderService {
       precioTotal: precioTotalNum,
       numeroOrden,
       truck,
+      operator,
     });
 
     return this.workOrderRepository.save(workOrder);
 }
-
   
   /**
    * Obtiene el historial de órdenes de trabajo de un camión específico.
@@ -77,79 +88,135 @@ export class WorkOrderService {
     });
   }
 
-  /**
-   * Obtiene todas las órdenes de trabajo.
-   */
 
-  findAll(): Promise<WorkOrder[]> {
-    return this.workOrderRepository.find({ relations: ['truck']});
+  async findByStock(id_stock: number): Promise<WorkOrder[]>{
+    return this.workOrderRepository.find({
+      where: {productos: {id_stock: id_stock}},
+      relations: ['productos'],
+    });
+  } 
+
+ /**
+  * Obtiene todas las órdenes de trabajo.
+  */
+ findAll(): Promise<WorkOrder[]> {
+    return this.workOrderRepository.find({ relations: ['truck', 'productos', 'operator'] });
   }
 
   /**
    * Obtiene una orden de trabajo por ID.
    */
   
-  async findOne(id_workOrder: number): Promise<WorkOrder> {
-    const workOrder = await this.workOrderRepository.findOne({
-      where: { id_workOrder },
-      relations: ['truck'], // Incluye datos del camión en la respuesta
-    });
-
-    if (!workOrder) {
-      throw new NotFoundException(`Orden de trabajo con ID ${id_workOrder} no encontrada.`);
-    }
-
-    return workOrder;
+  findOne(id_workOrder: number) {
+    return this.workOrderRepository.findOneBy({id_workOrder})
   }
 
+  
+  async findById(id_workOrder: number): Promise<WorkOrder> {
+    return await this.workOrderRepository.findOne({
+        where: { id_workOrder },
+        relations: ['truck', 'operator'], // Cargar las órdenes de trabajo relacionadas
+    });
+}
+
+  async findByOperator(operatorId: number): Promise<WorkOrder[]> {
+    return this.workOrderRepository.find({
+      where: { operator: { id_operator: operatorId } },
+      relations: ['operator'], // Incluye la relación con el operador
+      order: { fechaSolicitud: 'DESC' }, // Ordenado por fecha descendente
+    });
+  }
 
   async update(id_workOrder: number, updateWorkOrderDto: UpdateWorkOrderDto) {
     try {
-      console.log('ID de la orden de trabajo a actualizar:', id_workOrder);
-      console.log('Datos recibidos para actualizar:', updateWorkOrderDto);
-  
-      // Buscar la orden de trabajo en la base de datos
-      const form = await this.workOrderRepository.findOne({ where: { id_workOrder } });
-  
-      if (!form) {
-        throw new NotFoundException(`Orden de trabajo con ID ${id_workOrder} no encontrada`);
-      }
-  
-      // Lista de campos permitidos para actualizar
-      const allowedFields = [
-        'area', 'operario', 'encargado', 'responsable', 
-        'prioridad', 'tipoMantenimiento', 'fechaCierre', 
-        'descripcion', 'precioInterno', 'precioExterno'
-      ];
-  
-      // Filtrar solo los campos permitidos
-      const updatedData = Object.keys(updateWorkOrderDto)
-        .filter(key => allowedFields.includes(key))
-        .reduce((obj, key) => {
-          obj[key] = updateWorkOrderDto[key];
-          return obj;
-        }, {} as Partial<WorkOrder>);
-  
-      // Asignar los valores filtrados a la entidad existente
-      Object.assign(form, updatedData);
-  
-      // Recalcular precioTotal
-      const precioInterno = Number(updateWorkOrderDto.precioInterno) || form.precioInterno || 0;
-      const precioExterno = Number(updateWorkOrderDto.precioExterno) || form.precioExterno || 0;
-      form.precioTotal = precioInterno + precioExterno;
-  
-      // Guardar los cambios en la base de datos
-      await this.workOrderRepository.save(form);
-  
-      console.log('Orden de trabajo actualizada con éxito:', form);
-      return form;
+        console.log('ID de la orden de trabajo a actualizar:', id_workOrder);
+        console.log('Datos recibidos para actualizar:', updateWorkOrderDto);
+
+        // Buscar la orden de trabajo actual con sus productos
+        const workOrder = await this.workOrderRepository.findOne({
+            where: { id_workOrder },
+            relations: ['productos'], // Asegurar que se traen los productos relacionados
+        });
+
+        if (!workOrder) {
+            throw new NotFoundException(`Orden de trabajo con ID ${id_workOrder} no encontrada`);
+        }
+
+        // Cargar los productos de la orden actual y mapearlos por ID
+        const currentStockMap = new Map<number, Stock>(
+            workOrder.productos.map(product => [product.id_stock, product])
+        );
+
+        // Procesar los productos enviados en el DTO (evitando error si no hay productos)
+        if (updateWorkOrderDto.productos && updateWorkOrderDto.productos.length > 0) {
+            for (const updatedProduct of updateWorkOrderDto.productos) {
+                const { id_stock, cantidad, precio } = updatedProduct;
+                
+                // Buscar el stock en la base de datos
+                const stock = await this.stockRepository.findOne({ where: { id_stock } });
+
+                if (!stock) {
+                    throw new NotFoundException(`Producto con ID ${id_stock} no encontrado`);
+                }
+
+                // Si el producto ya estaba en la orden, calcular la diferencia de cantidad
+                const oldProduct = currentStockMap.get(id_stock);
+                if (oldProduct) {
+                    const cantidadDiferencia = cantidad - oldProduct.cantidad;
+                    stock.cantidad -= cantidadDiferencia; // Ajustar cantidad en stock
+                } else {
+                    stock.cantidad -= cantidad; // Restar la nueva cantidad directamente
+                }
+
+                // Actualizar precio unitario si se envió en la actualización
+                if (precio) {
+                    stock.precio = precio;
+                }
+
+                await this.stockRepository.save(stock); // Guardar cambios en stock
+            }
+        }
+
+        // Lista de campos permitidos para actualizar en WorkOrder
+        const allowedFields = [
+            'area', 'encargado', 'responsable', 
+            'prioridad', 'tipoMantenimiento', 'fechaCierre', 
+            'precio', 'precioInterno', 'precioExterno'
+        ];
+
+        // Filtrar solo los campos permitidos
+        const updatedData = Object.keys(updateWorkOrderDto)
+            .filter(key => allowedFields.includes(key))
+            .reduce((obj, key) => {
+                obj[key] = updateWorkOrderDto[key];
+                return obj;
+            }, {} as Partial<WorkOrder>);
+
+        // Asignar los valores filtrados a la entidad existente
+        Object.assign(workOrder, updatedData);
+
+        // Recalcular precioTotal
+        const precioInterno = Number(updateWorkOrderDto.precioInterno) || workOrder.precioInterno || 0;
+        const precioExterno = Number(updateWorkOrderDto.precioExterno) || workOrder.precioExterno || 0;
+
+        // Calcular precio total sumando los precios internos, externos y el costo de productos
+        const precioProductos = workOrder.productos.reduce((total, producto) => {
+            return total + (producto.cantidad * producto.precio);
+        }, 0);
+
+        workOrder.precioTotal = precioInterno + precioExterno + precioProductos;
+
+        // Guardar la orden de trabajo actualizada
+        await this.workOrderRepository.save(workOrder);
+
+        console.log('Orden de trabajo actualizada con éxito:', workOrder);
+        return workOrder;
     } catch (error) {
-      console.error('Error en el servicio update:', error.message, error.stack);
-      throw new InternalServerErrorException(`Error al actualizar: ${error.message}`);
+        console.error('Error en el servicio update:', error.message, error.stack);
+        throw new InternalServerErrorException(`Error al actualizar: ${error.message}`);
     }
-  }
-  
-  
+}
+
    remove(id_workOrder: number) {
     this.workOrderRepository.delete({id_workOrder});
   }

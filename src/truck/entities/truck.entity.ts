@@ -1,4 +1,5 @@
 import { Operator } from 'src/operator/entities/operator.entity';
+import { Section } from 'src/section/entities/section.entity';
 import { WorkOrder } from 'src/work-order/entities/work-order.entity';
 import {
     Column,
@@ -19,12 +20,6 @@ export class Truck {
 
     @Column({ type: 'text' })
     nombre_maquina: string;
-
-    @Column({ type: 'text' })
-    codigo_seccion: string;
-
-    @Column({ type: 'text' })
-    nombre_seccion: string;
 
     @Column({ type: 'text' })
     marca: string;
@@ -60,8 +55,8 @@ export class Truck {
     @OneToMany(() => WorkOrder, workOrder => workOrder.truck, {onDelete: 'CASCADE'})
     workOrders: WorkOrder[];
 
-    @OneToMany(() => Operator, operator => operator.truck, {onDelete: 'CASCADE'})      
-    operators: Operator[]
+    @OneToMany(() => Section, section => section.truck, {onDelete: 'CASCADE'})
+    sections: Section[];
 
     @DeleteDateColumn()
     deletedAt?: Date;

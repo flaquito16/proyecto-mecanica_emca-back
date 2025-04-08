@@ -4,7 +4,6 @@ import { UpdateTruckDto } from './dto/update-truck.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Truck } from './entities/truck.entity';
-import { log } from 'console';
 
 @Injectable()
 export class TruckService {
@@ -18,7 +17,7 @@ export class TruckService {
 
   findAll() {
     return this.truckRepository.find({
-      relations: ['workOrders']
+      relations: ['workOrders', 'section'], // Cargar las órdenes de trabajo y secciones relacionadas
     });
   }
 
@@ -29,12 +28,12 @@ export class TruckService {
   async findById(id_truck: number): Promise<Truck> {
     return await this.truckRepository.findOne({
         where: { id_truck },
-        relations: ['workOrders'], // Cargar las órdenes de trabajo relacionadas
+        relations: ['workOrders', 'sections'], // Cargar las órdenes de trabajo relacionadas
     });
 }
 
 
- async update(id_truck: number, updateTruckDto: UpdateTruckDto) {
+async update(id_truck: number, updateTruckDto: UpdateTruckDto) {
   try {
     console.log('Id de los camiones a actualizar: ', id_truck);
     console.log('Datos recibidos para actualizar:', updateTruckDto);
@@ -46,8 +45,8 @@ export class TruckService {
     }
 
     const dates = [
-      'codigo_maquina', 'nombre_maquina', 'codigo_seccion', 'nombre_seccion',
-      'marca','linea', 'fecha_fabricacion', 'comprado', 'modelo', 'capaciddad_produccion',
+      'codigo_maquina', 'nombre_maquina', 'marca', 'linea', 'fecha_fabricacion', 'comprado', 
+      'modelo', 'capaciddad_produccion',
       'pais_origen', 'fabricado', 'fecha_instalacion', 'numero_serie'
     ];
 
@@ -68,15 +67,15 @@ export class TruckService {
       console.error('Error en el servicio update:', error.message, error.stack);
       throw new InternalServerErrorException(`Error al actualizar: ${error.message}`);
   }
-}
+};
 
   remove(id_truck: number) {
     return this.truckRepository.softRemove({id_truck});
-  }
+  };
 
   async findAllWithWorkOrders(): Promise<Truck[]> {
-    return this.truckRepository.find({ relations: ['workOrders'] });
-  }
+    return this.truckRepository.find({ relations: ['workOrders', 'sections'] });
+  };
 
   /**
    * Obtiene un camión por ID con su historial de órdenes de trabajo
@@ -86,5 +85,5 @@ export class TruckService {
       where: { id_truck: id },
       relations: ['workOrders'],
     });
-  }
+  };
 }

@@ -1,16 +1,21 @@
-import { Transform } from 'class-transformer';
-import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength, ValidateNested } from 'class-validator';
+
+class CreateProductDto {
+    @IsNotEmpty()
+    @IsNumber()
+    id_stock: number;
+
+    @IsNotEmpty()
+    @IsNumber()
+    cantidad: number;
+
+    @IsNotEmpty()
+    @IsNumber()
+    precio: number;
+}
 
 export class CreateWorkOrderDto {
-    @Transform(({ value }) => value.trim().toUpperCase())
-    @IsString()
-    @MinLength(1)
-    area: string;
-
-    @Transform(({ value }) => value.trim().toUpperCase())
-    @IsString()
-    @MinLength(1)
-    operario: string;
 
     @Transform(({ value }) => value.trim().toUpperCase())
     @IsString()
@@ -49,9 +54,9 @@ export class CreateWorkOrderDto {
     fechaCierre: string;
 
     @IsOptional()
-    @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+    @Transform(({ value }) => value ? parseInt(value) : null)
     @IsNumber()
-    numeroOrden: string;
+    numeroOrden: number;
 
     @Transform(({ value }) => value.trim().toUpperCase())
     @IsString()
@@ -73,7 +78,17 @@ export class CreateWorkOrderDto {
     @IsNumber()
     precioTotal: number;
 
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CreateProductDto)
+    productos?: CreateProductDto[];
+
     @IsNotEmpty()
     @IsNumber()
     truckId: number;
+
+    @IsNotEmpty()
+    @IsNumber()
+    operatorId: number;
 }

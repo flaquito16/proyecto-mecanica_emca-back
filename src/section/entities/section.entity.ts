@@ -1,7 +1,11 @@
+import { Truck } from 'src/truck/entities/truck.entity';
 import {
     Column,
     DeleteDateColumn,
     Entity,
+    JoinColumn,
+    ManyToMany,
+    ManyToOne,
     PrimaryGeneratedColumn,
   } from 'typeorm';
   
@@ -11,7 +15,14 @@ export class Section {
     id_section: number;
 
     @Column({type: 'text'})
-    nombre_seccion: string;
+    codigo: string;
+
+    @Column({type: 'text'})
+    nombre: string;
+
+    @ManyToOne(() => Truck, truck => truck.sections, {onDelete: 'CASCADE'})
+    @JoinColumn({ name: 'truckId' }) 
+    truck: Truck;
 
     @DeleteDateColumn()
     deletedAt?: Date;

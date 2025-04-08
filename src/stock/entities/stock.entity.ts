@@ -3,6 +3,8 @@ import {
     Column,
     DeleteDateColumn,
     Entity,
+    JoinColumn,
+    ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
   } from 'typeorm';
@@ -21,7 +23,8 @@ export class Stock {
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
     precio: number;
 
-    @OneToMany(() => Stock, stock => stock.workOrder)
+    @ManyToOne(() => WorkOrder, workOrder => workOrder.productos, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'workOrderId' }) 
     workOrder: WorkOrder;
 
     @DeleteDateColumn()

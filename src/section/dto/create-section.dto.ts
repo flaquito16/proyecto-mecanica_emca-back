@@ -1,9 +1,20 @@
 import { Transform } from 'class-transformer';
-import { IsString, MinLength } from 'class-validator';
+import { IsEmpty, IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
 
 export class CreateSectionDto {
+
     @Transform(({ value }) => value.trim().toUpperCase())
     @IsString()
     @MinLength(1)
-    nombre_seccion: string;
+    codigo: string;
+
+    @Transform(({ value }) => value.trim().toUpperCase())
+    @IsString()
+    @MinLength(1)
+    nombre: string;
+    
+    @IsNotEmpty()
+    @IsNumber()
+    truckId: number; // Cambiado a truckId para mantener la consistencia con el DTO de Truck
+
 }
