@@ -32,7 +32,6 @@ export class TruckService {
     });
 }
 
-
 async update(id_truck: number, updateTruckDto: UpdateTruckDto) {
   try {
     console.log('Id de los camiones a actualizar: ', id_truck);

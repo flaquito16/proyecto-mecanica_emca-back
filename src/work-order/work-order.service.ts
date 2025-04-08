@@ -39,7 +39,6 @@ export class WorkOrderService {
     return `${date}-${String(nextNumber).padStart(3, '0')}`;
   }
   
-
   async create(createWorkOrderDto: CreateWorkOrderDto): Promise<WorkOrder> {
     const { truckId, operatorId, fechaCierre, precioInterno, precioExterno, precioTotal, ...workOrderData } = createWorkOrderDto;
     const numeroOrden = await this.generateWorkOrderNumber();
@@ -129,93 +128,92 @@ export class WorkOrderService {
 
   async update(id_workOrder: number, updateWorkOrderDto: UpdateWorkOrderDto) {
     try {
-        console.log('ID de la orden de trabajo a actualizar:', id_workOrder);
-        console.log('Datos recibidos para actualizar:', updateWorkOrderDto);
-
-        // Buscar la orden de trabajo actual con sus productos
-        const workOrder = await this.workOrderRepository.findOne({
-            where: { id_workOrder },
-            relations: ['productos'], // Asegurar que se traen los productos relacionados
-        });
-
-        if (!workOrder) {
-            throw new NotFoundException(`Orden de trabajo con ID ${id_workOrder} no encontrada`);
+      const workOrder = await this.workOrderRepository.findOne({
+        where: { id_workOrder },
+        relations: ['productos'],
+      });
+  
+      if (!workOrder) {
+        throw new NotFoundException(`Orden de trabajo con ID ${id_workOrder} no encontrada`);
+      }
+  
+      // 1. Devolver al stock los productos actuales
+      for (const oldProduct of workOrder.productos) {
+        const stock = await this.stockRepository.findOne({ where: { id_stock: oldProduct.id_stock } });
+        if (stock) {
+          stock.cantidad += oldProduct.cantidad;
+          await this.stockRepository.save(stock);
         }
-
-        // Cargar los productos de la orden actual y mapearlos por ID
-        const currentStockMap = new Map<number, Stock>(
-            workOrder.productos.map(product => [product.id_stock, product])
-        );
-
-        // Procesar los productos enviados en el DTO (evitando error si no hay productos)
-        if (updateWorkOrderDto.productos && updateWorkOrderDto.productos.length > 0) {
-            for (const updatedProduct of updateWorkOrderDto.productos) {
-                const { id_stock, cantidad, precio } = updatedProduct;
-                
-                // Buscar el stock en la base de datos
-                const stock = await this.stockRepository.findOne({ where: { id_stock } });
-
-                if (!stock) {
-                    throw new NotFoundException(`Producto con ID ${id_stock} no encontrado`);
-                }
-
-                // Si el producto ya estaba en la orden, calcular la diferencia de cantidad
-                const oldProduct = currentStockMap.get(id_stock);
-                if (oldProduct) {
-                    const cantidadDiferencia = cantidad - oldProduct.cantidad;
-                    stock.cantidad -= cantidadDiferencia; // Ajustar cantidad en stock
-                } else {
-                    stock.cantidad -= cantidad; // Restar la nueva cantidad directamente
-                }
-                // Actualizar precio unitario si se envió en la actualización
-                if (precio) {
-                    stock.precio = precio;
-                }
-
-                await this.stockRepository.save(stock); // Guardar cambios en stock
-            }
+      }
+  
+      // 2. Limpiar los productos actuales de la orden
+      workOrder.productos = [];
+  
+      const nuevosProductos: Stock[] = [];
+  
+      if (updateWorkOrderDto.productos && updateWorkOrderDto.productos.length > 0) {
+        for (const updatedProduct of updateWorkOrderDto.productos) {
+          const { id_stock, cantidad, precio } = updatedProduct;
+  
+          const stock = await this.stockRepository.findOne({ where: { id_stock } });
+          if (!stock) {
+            throw new NotFoundException(`Producto con ID ${id_stock} no encontrado`);
+          }
+  
+          // Restar nueva cantidad
+          if (stock.cantidad < cantidad) {
+            throw new InternalServerErrorException(
+              `Stock insuficiente para el producto ${stock.nombre || id_stock}`
+            );
+          }
+  
+          stock.cantidad -= cantidad;
+          stock.precio = precio; // Puedes controlar esto si no quieres que siempre se actualice
+          await this.stockRepository.save(stock);
+  
+          // Construir nuevo producto para la orden
+          const nuevoProducto = {
+            ...stock,
+            cantidad,
+            precio,
+          };
+          nuevosProductos.push(nuevoProducto as Stock);
         }
-
-        // Lista de campos permitidos para actualizar en WorkOrder
-        const allowedFields = [
-            'area', 'encargado', 'responsable', 
-            'prioridad', 'tipoMantenimiento', 'fechaCierre', 
-            'precio', 'precioInterno', 'precioExterno'
-        ];
-
-        // Filtrar solo los campos permitidos
-        const updatedData = Object.keys(updateWorkOrderDto)
-            .filter(key => allowedFields.includes(key))
-            .reduce((obj, key) => {
-                obj[key] = updateWorkOrderDto[key];
-                return obj;
-            }, {} as Partial<WorkOrder>);
-
-        // Asignar los valores filtrados a la entidad existente
-        Object.assign(workOrder, updatedData);
-
-        // Recalcular precioTotal
-        const precioInterno = Number(updateWorkOrderDto.precioInterno) || workOrder.precioInterno || 0;
-        const precioExterno = Number(updateWorkOrderDto.precioExterno) || workOrder.precioExterno || 0;
-
-        // Calcular precio total sumando los precios internos, externos y el costo de productos
-        const precioProductos = workOrder.productos.reduce((total, producto) => {
-            return total + (producto.cantidad * producto.precio);
-        }, 0);
-
-        workOrder.precioTotal = precioInterno + precioExterno + precioProductos;
-
-        // Guardar la orden de trabajo actualizada
-        await this.workOrderRepository.save(workOrder);
-
-        console.log('Orden de trabajo actualizada con éxito:', workOrder);
-        return workOrder;
+      }
+  
+      workOrder.productos = nuevosProductos;
+      // 3. Actualizar otros campos permitidos
+      const allowedFields = [
+        'area', 'encargado', 'responsable',
+        'prioridad', 'tipoMantenimiento', 'fechaCierre',
+        'precioInterno', 'precioExterno', 'productos'
+      ];
+  
+      for (const key of allowedFields) {
+        if (key in updateWorkOrderDto) {
+          (workOrder as any)[key] = updateWorkOrderDto[key];
+        }
+      }
+  
+      // 4. Recalcular precioTotal
+      const precioInterno = Number(workOrder.precioInterno) || 0;
+      const precioExterno = Number(workOrder.precioExterno) || 0;
+      const precioProductos = nuevosProductos.reduce((total, producto) => {
+        return total + (producto.cantidad * producto.precio);
+      }, 0);
+  
+      workOrder.precioTotal = precioInterno + precioExterno + precioProductos;
+  
+      // 5. Guardar orden de trabajo
+      await this.workOrderRepository.save(workOrder);
+      return workOrder;
+  
     } catch (error) {
-        console.error('Error en el servicio update:', error.message, error.stack);
-        throw new InternalServerErrorException(`Error al actualizar: ${error.message}`);
+      console.error('Error en el servicio update:', error.message);
+      throw new InternalServerErrorException(`Error al actualizar: ${error.message}`);
     }
-}
-
+  }
+  
    remove(id_workOrder: number) {
     this.workOrderRepository.delete({id_workOrder});
   }

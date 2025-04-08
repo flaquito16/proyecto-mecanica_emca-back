@@ -28,8 +28,8 @@ export class UserService {
     return this.userRepository.findOneBy({ id_usuario });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  update(id_usuario: number, updateUserDto: UpdateUserDto) {
+    return this.userRepository.update({id_usuario}, updateUserDto);
   }
 
   remove(id_usuario: number) {
