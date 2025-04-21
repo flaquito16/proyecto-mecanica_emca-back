@@ -14,6 +14,9 @@ export class Stock {
     id_stock: number;
 
     @Column({type: 'text'})
+    item: string;
+
+    @Column({type: 'text'})
     nombre: string;
 
     @Column({type: 'int'})

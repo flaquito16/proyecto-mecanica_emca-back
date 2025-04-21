@@ -13,6 +13,7 @@ import { SectionModule } from './section/section.module';
 import { Section } from './section/entities/section.entity';
 import { OperatorModule } from './operator/operator.module';
 import { Operator } from './operator/entities/operator.entity';
+import { informesModule } from './Informes/informes.module';
 
 
 @Module({
@@ -40,6 +41,7 @@ import { Operator } from './operator/entities/operator.entity';
   StockModule, 
   SectionModule, 
   OperatorModule,
+  informesModule,
 ],
   controllers: [],
   providers: [],

@@ -16,6 +16,9 @@ async function bootstrap() {
   });
 
   app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
+
+  app.use(bodyParser.json());
 
   app.setGlobalPrefix('api/v1');
 

@@ -110,7 +110,6 @@ export class WorkOrderService {
     return this.workOrderRepository.findOneBy({id_workOrder})
   }
 
-  
   async findById(id_workOrder: number): Promise<WorkOrder> {
     return await this.workOrderRepository.findOne({
         where: { id_workOrder },
@@ -199,14 +198,21 @@ export class WorkOrderService {
       const precioInterno = Number(workOrder.precioInterno) || 0;
       const precioExterno = Number(workOrder.precioExterno) || 0;
       const precioProductos = nuevosProductos.reduce((total, producto) => {
-        return total + (producto.cantidad * producto.precio);
+        const precio = producto.precio ?? 0;
+        const cantidad = producto.cantidad ?? 0;
+        return total + (cantidad * precio);
       }, 0);
+      
   
       workOrder.precioTotal = precioInterno + precioExterno + precioProductos;
   
       // 5. Guardar orden de trabajo
+      console.log(precioProductos);
+      console.log(workOrder.precioTotal);
       await this.workOrderRepository.save(workOrder);
       return workOrder;
+      
+      
   
     } catch (error) {
       console.error('Error en el servicio update:', error.message);
